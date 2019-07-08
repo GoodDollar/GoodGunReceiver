@@ -55,5 +55,5 @@ const runServer = opts =>
 
 runServer({
   host: "0.0.0.0",
-  port: 4444
+  port: process.env.PORT || 4444
 });
