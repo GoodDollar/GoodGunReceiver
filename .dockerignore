@@ -13,3 +13,8 @@ npm-debug.log
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
+
+gun.min.js
+guntest.html
+test.js.vscode
+.vscode

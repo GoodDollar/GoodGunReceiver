@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+VOLUME ["/lmdbdata"]
+
 EXPOSE 4444
 
 CMD ["node", "index.js"]
