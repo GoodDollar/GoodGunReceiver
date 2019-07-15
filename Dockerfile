@@ -8,7 +8,7 @@ RUN npm install
 
 COPY . .
 
-VOLUME ["/lmdbdata"]
+VOLUME ["/app/lmdbdata"]
 
 EXPOSE 4444
 
