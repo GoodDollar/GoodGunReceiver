@@ -12,6 +12,8 @@ const {
 const { createSuppressor } = require("@notabug/gun-suppressor");
 const { PERMISSIVE_SCHEMA } = require("@notabug/gun-suppressor-sear");
 const { receiver: lmdb } = require("@notabug/gun-lmdb");
+const AWS = require("aws-sdk");
+
 
 const Gun = require("gun/gun");
 const suppressor = createSuppressor(Gun, PERMISSIVE_SCHEMA);
@@ -53,7 +55,35 @@ const runServer = opts =>
     ...(opts.peers || []).map(peer => websocketTransport.client(peer))
   )(opts);
 
-runServer({
-  host: "0.0.0.0",
-  port: process.env.PORT || 4444
-});
+async function discoverPeersAndRunServer() {
+  const ipTypes = {
+    public: "PublicIpAddress",
+    private: "PrivateIpAddress"
+  }
+
+  let peers = [];
+
+  try {
+    const AWS_REGION = "us-west-2";
+    const ec2 = new AWS.EC2({ region: AWS_REGION });
+
+    const data = await ec2.describeInstances().promise();
+
+    peers = R.flatten(data.Reservations.map((reservation) => {
+      reservationPrivateIPs = reservation.Instances.map((instance) => instance[ipTypes.public]);
+      return reservationPrivateIPs.map(ip => "http://" + ip);
+    }));
+
+    console.log(peers);
+  } catch (error) {
+    console.log("Peer discovery error:", error);
+  }
+
+  runServer({
+    host: "0.0.0.0",
+    port: process.env.PORT || 4444,
+    peers
+  });
+}
+
+discoverPeersAndRunServer();
