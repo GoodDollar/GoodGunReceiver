@@ -67,29 +67,22 @@ async function discoverPeersAndRunServer() {
     const EB_ENV_NAME = process.env.EB_ENV_NAME;
     const ec2 = new AWS.EC2({ region: AWS_REGION });
 
-
-    const data = await ec2.describeInstances().promise();
+    const data = await ec2
+      .describeInstances({
+        Filters: [
+          {
+            Name: "tag:elasticbeanstalk:environment-name",
+            Values: [EB_ENV_NAME]
+          }
+        ]
+      })
+      .promise();
 
     peers = R.flatten(
-      data.Reservations.filter(reservation => {
-        let result = false;
-
-        reservation.Instances.forEach(instance => {
-          instance.Tags.forEach(tag => {
-            if (
-              tag.Key === "elasticbeanstalk:environment-name" &&
-              tag.Value === EB_ENV_NAME
-            ) {
-              result = true;
-            }
-          });
-        });
-
-        return result;
-      }).map(reservation => {
+      data.Reservations.map(reservation => {
         // console.log(JSON.stringify(reservation, null, 2));
         reservationPrivateIPs = reservation.Instances.map(
-          instance => instance[ipTypes.public]
+          instance => instance[ipTypes.private]
         );
         return reservationPrivateIPs.map(ip => "http://" + ip);
       })
