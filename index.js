@@ -64,47 +64,36 @@ async function discoverPeersAndRunServer() {
 
   try {
     const AWS_REGION = process.env.AWS_REGION;
+    const EB_ENV_NAME = process.env.EB_ENV_NAME;
     const ec2 = new AWS.EC2({ region: AWS_REGION });
-    const autoscaling = new AWS.AutoScaling({ region: AWS_REGION });
 
-    const {
-      AutoScalingGroups
-    } = await autoscaling.describeAutoScalingGroups().promise();
 
-    if (AutoScalingGroups.length > 0) {
-      const groupNames = AutoScalingGroups.map(
-        autoScalingGroup => autoScalingGroup.AutoScalingGroupName
-      );
+    const data = await ec2.describeInstances().promise();
 
-      const data = await ec2.describeInstances().promise();
+    peers = R.flatten(
+      data.Reservations.filter(reservation => {
+        let result = false;
 
-      peers = R.flatten(
-        data.Reservations.filter(reservation => {
-          let result = false;
-
-          reservation.Instances.forEach(instance => {
-            instance.Tags.forEach(tag => {
-              if (
-                tag.Key === "aws:autoscaling:groupName" &&
-                groupNames.includes(tag.Value)
-              ) {
-                result = true;
-              }
-            });
+        reservation.Instances.forEach(instance => {
+          instance.Tags.forEach(tag => {
+            if (
+              tag.Key === "elasticbeanstalk:environment-name" &&
+              tag.Value === EB_ENV_NAME
+            ) {
+              result = true;
+            }
           });
-          
-          return result;
-        }).map(reservation => {
-          // console.log(JSON.stringify(reservation, null, 2));
-          reservationPrivateIPs = reservation.Instances.map(
-            instance => instance[ipTypes.public]
-          );
-          return reservationPrivateIPs.map(ip => "http://" + ip);
-        })
-      );
-    } else {
-      console.log("Autoscaling group not found");
-    }
+        });
+
+        return result;
+      }).map(reservation => {
+        // console.log(JSON.stringify(reservation, null, 2));
+        reservationPrivateIPs = reservation.Instances.map(
+          instance => instance[ipTypes.public]
+        );
+        return reservationPrivateIPs.map(ip => "http://" + ip);
+      })
+    );
 
     console.log(peers);
   } catch (error) {
