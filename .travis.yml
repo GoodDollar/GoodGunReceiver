@@ -29,5 +29,5 @@ before_script:
 script:
   - if [ "$TRAVIS_BRANCH" == "test-deploy-script" ]; then
       eb init -p docker GoodGunReceiver;
-      eb deploy EB_ENV_NAME; 
+      eb deploy $EB_ENV_NAME; 
     fi
