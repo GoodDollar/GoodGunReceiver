@@ -19,9 +19,9 @@ before_install:
   - pip install --upgrade awsebcli
 
 before_script:
-  - aws configure set aws_access_key_id AWS_ACCESS_KEY
+  - aws configure set aws_access_key_id AWS_ACCESS_KEY_ID
   - aws configure set aws_secret_access_key AWS_SECRET_ACCESS_KEY
-  - aws configure set default.region us-west-2
+  - aws configure set default.region AWS_REGION
   - aws configure set metadata_service_timeout 1200
   - aws configure set metadata_service_num_attempts 3
   - aws configure list
@@ -29,5 +29,5 @@ before_script:
 script:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
       eb init -p docker GoodGunReceiver;
-      eb deploy GoodGunReceiver-dev; 
+      travis_wait 30 eb deploy $EB_ENV_NAME; 
     fi
