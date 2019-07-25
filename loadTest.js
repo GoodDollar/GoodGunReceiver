@@ -1,13 +1,16 @@
 const Gun = require("gun");
 const Bottleneck = require("bottleneck");
 
-const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
+// const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
+const URL = "http://localhost:4444/";
 
-function printConfig(maxConcurrent, totalPuts) {
+function printConfig(maxConcurrent, totalPuts, numClients) {
   console.log(
     "====================================================================="
   );
-  console.log(`making ${totalPuts} puts ${maxConcurrent} puts concurrently`);
+  console.log(
+    `making ${totalPuts} puts ${maxConcurrent} puts concurrently. clients: ${numClients}`
+  );
   console.log(
     "====================================================================="
   );
@@ -19,29 +22,35 @@ function printResults(successfulPutsCount, failedPutsCount, totalTime) {
   );
   console.log(`${failedPutsCount} puts failed`);
   console.log(
-    `${successfulPutsCount} successful puts were made in ${totalTime} seconds`
+    `${successfulPutsCount} successful puts were made in ${totalTime} seconds. ${successfulPutsCount /
+      totalTime} TPS.`
   );
   console.log(
     "====================================================================="
   );
 }
 
-function makePut(client) {
+function makePut(client, i) {
   return new Promise(resolve => {
     const testNumber = Math.random();
-    client.get(`test-${testNumber}`).put(
-      {
-        testNumber,
-        image:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
-      },
-      ack => {
-        if (ack.err) {
-          resolve(false);
+    client
+      .get("tests")
+      .get(`test-${testNumber}`)
+      .get(i)
+      .put(
+        {
+          testNumber,
+          image:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
+        },
+        ack => {
+          // console.log({ ack, i });
+          if (ack.err) {
+            return resolve(false);
+          }
+          resolve(true);
         }
-        resolve(true);
-      }
-    );
+      );
   });
 }
 
@@ -54,10 +63,20 @@ function getSuccessfulAndFailedPutsCounts(promisesResults) {
   return [successfulPutsCount, failedPutsCount];
 }
 
-async function runTest(maxConcurrent, totalPuts) {
-  printConfig(maxConcurrent, totalPuts);
+async function runTest(maxConcurrent, totalPuts, numClients) {
+  printConfig(maxConcurrent, totalPuts, numClients);
 
-  const client = Gun(URL);
+  console.log("Connecting to Gun server:", URL);
+  const clients = [];
+  for (let i = 0; i < numClients; i++) {
+    const client = Gun({
+      peers: [URL],
+      radisk: false,
+      localStorage: false,
+      axe: false
+    });
+    clients.push(client);
+  }
   const limiter = new Bottleneck({
     maxConcurrent
   });
@@ -65,7 +84,9 @@ async function runTest(maxConcurrent, totalPuts) {
   const promises = [];
 
   for (let i = 0; i < totalPuts; i++) {
-    const putPromise = limiter.schedule(() => makePut(client));
+    const putPromise = limiter.schedule(() =>
+      makePut(clients[i % numClients], i)
+    );
     promises.push(putPromise);
   }
 
@@ -83,7 +104,7 @@ async function runTest(maxConcurrent, totalPuts) {
   process.exit(0);
 }
 
-const maxConcurrent = 100;
-const totalPuts = 1000;
-
-runTest(maxConcurrent, totalPuts);
+const maxConcurrent = 20;
+const totalPuts = 300;
+const numClients = 10;
+runTest(maxConcurrent, totalPuts, numClients);
