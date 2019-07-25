@@ -1,0 +1,15 @@
+# Git
+.git
+.gitignore
+
+# Docker configuration
+Dockerfile
+Makefile
+docker-compose.yml
+
+# # npm
+node_modules
+npm-debug.log
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*

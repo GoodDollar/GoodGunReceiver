@@ -1,2 +1,14 @@
 node_modules
 lmdbdata
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+package-lock.json
+gun.min.js
+.vscode/launch.json
+test.js
+guntest.html
+.vscode
+radata*
