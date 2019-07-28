@@ -34,9 +34,7 @@ function makePut(client, i) {
   return new Promise(resolve => {
     const testNumber = Math.random();
     client
-      .get("tests")
-      .get(`test-${testNumber}`)
-      .get(i)
+      .get(`test-${testNumber}-${i}`)
       .put(
         {
           testNumber,
@@ -105,6 +103,6 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
 }
 
 const maxConcurrent = 20;
-const totalPuts = 300;
+const totalPuts = 3000;
 const numClients = 10;
 runTest(maxConcurrent, totalPuts, numClients);
