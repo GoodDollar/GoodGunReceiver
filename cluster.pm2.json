@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "name": "gun-receiver",
+      "exec_mode": "cluster",
+      "instances": 2,
+      "script": "./index.js",
+      "env": { "NODE_ENV": "production" },
+      "args": []
+    }
+  ]
+}

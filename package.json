@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "pm2 start cluster.pm2.json",
+    "stop": "pm2 stop gun-receiver",
+    "monitor": "pm2 monit",
     "test": "echo \"Error: no test specified\""
   },
   "author": "",

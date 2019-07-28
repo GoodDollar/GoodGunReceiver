@@ -109,7 +109,7 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
   process.exit(0);
 }
 
-const maxConcurrent = 300;
-const totalPuts = 2000;
-const numClients = 20;
+const maxConcurrent = 20;
+const totalPuts = 3000;
+const numClients = 10;
 runTest(maxConcurrent, totalPuts, numClients);
