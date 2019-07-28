@@ -2,8 +2,8 @@ const Gun = require("gun");
 const Bottleneck = require("bottleneck");
 const pLimit = require("p-limit");
 
-// const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
-const URL = "http://localhost:4444/";
+const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
+// const URL = "http://localhost:4444/";
 // const URL = "http://localhost:8765/gun";
 
 function printConfig(maxConcurrent, totalPuts, numClients) {
@@ -46,7 +46,7 @@ function makePut(client, i) {
         if (ack.err) {
           return resolve(false);
         }
-        // console.log("done", i);
+        if (i % 100 === 0) console.log("done", i);
         resolve(true);
       }
     );
@@ -76,9 +76,9 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
       axe: false,
       multicast: false
     });
-    const testNode = client.get(`test-${testNumber}`).get("z");
-    // testNode.put({ client: i });
-    // await testNode;
+    const testNode = client.get(`test-${testNumber}`);
+    testNode.put({ client: i });
+    await testNode;
     clients.push(testNode);
   }
   const limiter = pLimit(maxConcurrent);
@@ -109,7 +109,7 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
   process.exit(0);
 }
 
-const maxConcurrent = 20;
-const totalPuts = 3000;
+const maxConcurrent = 50;
+const totalPuts = 2000;
 const numClients = 10;
 runTest(maxConcurrent, totalPuts, numClients);
