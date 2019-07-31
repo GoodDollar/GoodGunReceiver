@@ -9,14 +9,11 @@ python:
 before_install:
   - gem update --system
   - sudo apt-get install -y python3.4
-  - sudo apt-get install --upgrade -y python-pip
-  - sudo apt-get install jq
-  - sudo pip install --user virtualenv
+  - sudo apt-get install --upgrade -y python3-pip
+  - sudo apt-get install python3-setuptools
 
-  - virtualenv my_py3 --python=/usr/bin/python3.4
-  - source my_py3/bin/activate
-  - pip install --upgrade awscli
-  - pip install --upgrade awsebcli
+  - pip3 install --upgrade --user awscli
+  - pip3 install --upgrade --user awsebcli
 
 before_script:
   - aws configure set aws_access_key_id AWS_ACCESS_KEY_ID
