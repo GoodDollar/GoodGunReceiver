@@ -3,7 +3,7 @@ const Bottleneck = require("bottleneck");
 const pLimit = require("p-limit");
 
 const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
-// const URL = "http://localhost:4444/";
+// const URL = "http://localhost:4444/gun";
 // const URL = "http://localhost:8765/gun";
 
 function printConfig(maxConcurrent, totalPuts, numClients) {
@@ -48,7 +48,7 @@ function makePut(client, i) {
         if (ack.err) {
           return resolve(false);
         }
-        if (i % 100 === 0) console.log("done", i);
+        // if (i % 100 === 0) console.log("done", i);
         resolve(true);
       }
     );
@@ -85,30 +85,32 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
     console.log("Initialized client", i);
     clients.push(client);
   }
-  const limiter = pLimit(maxConcurrent);
-  // const limiter = new Bottleneck({
-  //   maxConcurrent,
-  //   minTime: 100
-  // });
+  while (true) {
+    const limiter = pLimit(maxConcurrent);
+    // const limiter = new Bottleneck({
+    //   maxConcurrent,
+    //   minTime: 100
+    // });
 
-  const promises = [];
+    const promises = [];
 
-  for (let i = 0; i < totalPuts; i++) {
-    // const putPromise = limiter.schedule(makePut(clients[i % numClients], i));
-    const putPromise = limiter(() => makePut(clients[i % numClients], i));
-    promises.push(putPromise);
+    for (let i = 0; i < totalPuts; i++) {
+      // const putPromise = limiter.schedule(makePut(clients[i % numClients], i));
+      const putPromise = limiter(() => makePut(clients[i % numClients], i));
+      promises.push(putPromise);
+    }
+
+    const start = Date.now();
+    const promisesResults = await Promise.all(promises);
+    const totalTime = ((Date.now() - start) / 1000);
+
+    const [
+      successfulPutsCount,
+      failedPutsCount
+    ] = getSuccessfulAndFailedPutsCounts(promisesResults);
+
+    printResults(successfulPutsCount, failedPutsCount, totalTime);
   }
-
-  const start = Date.now();
-  const promisesResults = await Promise.all(promises);
-  const totalTime = Math.ceil((Date.now() - start) / 1000);
-
-  const [
-    successfulPutsCount,
-    failedPutsCount
-  ] = getSuccessfulAndFailedPutsCounts(promisesResults);
-
-  printResults(successfulPutsCount, failedPutsCount, totalTime);
 
   process.exit(0);
 }

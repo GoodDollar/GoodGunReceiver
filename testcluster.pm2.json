@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "name": "load-test",
+      "exec_mode": "cluster",
+      "instances": 2,
+      "script": "./loadTest.js",
+      "env": { "NODE_ENV": "production" },
+      "args": []
+    }
+  ]
+}
