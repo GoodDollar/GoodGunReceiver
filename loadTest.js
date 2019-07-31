@@ -35,9 +35,11 @@ function printResults(successfulPutsCount, failedPutsCount, totalTime) {
 function makePut(client, i) {
   return new Promise(resolve => {
     // console.log(i);
-    client.get(i).put(
+    const randkey = Math.random();
+    client.get(randkey).put(
       {
         i,
+        text: randkey.toString(),
         image:
           "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
       },
@@ -79,7 +81,9 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
     const testNode = client.get(`test-${testNumber}`);
     testNode.put({ client: i });
     await testNode;
-    clients.push(testNode);
+    // testNode.put({ client: i });
+    console.log("Initialized client", i);
+    clients.push(client);
   }
   const limiter = pLimit(maxConcurrent);
   // const limiter = new Bottleneck({
@@ -109,7 +113,7 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
   process.exit(0);
 }
 
-const maxConcurrent = 50;
+const maxConcurrent = 100;
 const totalPuts = 2000;
 const numClients = 10;
 runTest(maxConcurrent, totalPuts, numClients);
