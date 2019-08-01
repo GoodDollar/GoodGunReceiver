@@ -85,7 +85,7 @@ async function discoverPeersAndRunServer() {
           instance => instance[ipTypes.private]
         );
         return reservationPrivateIPs.map(ip => "http://" + ip);
-      })
+      }).filter(ip => ip !== undefined)
     );
 
     console.log(peers);
