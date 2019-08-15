@@ -2,10 +2,11 @@ const Gun = require("gun");
 const Bottleneck = require("bottleneck");
 const pLimit = require("p-limit");
 
-const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
+// const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
 // const URL = "http://localhost:4444/";
-// const URL = "http://localhost:8765/gun";
-
+//const URL = "http://localhost:8765/gun";
+const URL = "https://goodgun-prod.herokuapp.com/gun"
+//const URL = "http://163.172.135.213:8765/gun"
 function printConfig(maxConcurrent, totalPuts, numClients) {
   console.log(
     "====================================================================="
@@ -40,8 +41,8 @@ function makePut(client, i) {
       {
         i,
         text: randkey.toString(),
-        image:
-          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
+      image:
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
       },
       ack => {
         // console.log({ ack, i });
@@ -64,7 +65,7 @@ function getSuccessfulAndFailedPutsCounts(promisesResults) {
   return [successfulPutsCount, failedPutsCount];
 }
 
-async function runTest(maxConcurrent, totalPuts, numClients) {
+async function runTest(maxConcurrent, totalPuts, numClients, type = "fast") {
   printConfig(maxConcurrent, totalPuts, numClients);
 
   console.log("Connecting to Gun server:", URL);
@@ -83,7 +84,8 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
     await testNode;
     // testNode.put({ client: i });
     console.log("Initialized client", i);
-    clients.push(client);
+    if (type == "slow") clients.push(testNode);
+    else clients.push(client);
   }
   const limiter = pLimit(maxConcurrent);
   // const limiter = new Bottleneck({
@@ -114,6 +116,7 @@ async function runTest(maxConcurrent, totalPuts, numClients) {
 }
 
 const maxConcurrent = 100;
-const totalPuts = 2000;
-const numClients = 10;
+const totalPuts = 1000;
+const numClients = 5;
 runTest(maxConcurrent, totalPuts, numClients);
+//runTest(maxConcurrent, totalPuts, numClients, "slow");
