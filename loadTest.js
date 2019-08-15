@@ -5,7 +5,7 @@ const pLimit = require("p-limit");
 // const URL = "http://goodgundb.3mae6nqjdw.us-west-2.elasticbeanstalk.com/";
 // const URL = "http://localhost:4444/";
 //const URL = "http://localhost:8765/gun";
-const URL = "https://goodgun-prod.herokuapp.com/gun"
+const URL = "https://goodgun-prod.herokuapp.com/gun";
 //const URL = "http://163.172.135.213:8765/gun"
 function printConfig(maxConcurrent, totalPuts, numClients) {
   console.log(
@@ -41,15 +41,15 @@ function makePut(client, i) {
       {
         i,
         text: randkey.toString(),
-      image:
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
+        image:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAAKUlEQVR42u3NQQEAAAQEsJNcdGLw2AqskukcKLFYLBaLxWKxWCwW/40XXe8s4935ED8AAAAASUVORK5CYII="
       },
       ack => {
         // console.log({ ack, i });
         if (ack.err) {
           return resolve(false);
         }
-        if (i % 100 === 0) console.log("done", i);
+        // if (i % 100 === 0) console.log("done", i);
         resolve(true);
       }
     );
@@ -87,30 +87,32 @@ async function runTest(maxConcurrent, totalPuts, numClients, type = "fast") {
     if (type == "slow") clients.push(testNode);
     else clients.push(client);
   }
-  const limiter = pLimit(maxConcurrent);
-  // const limiter = new Bottleneck({
-  //   maxConcurrent,
-  //   minTime: 100
-  // });
+  while (true) {
+    const limiter = pLimit(maxConcurrent);
+    // const limiter = new Bottleneck({
+    //   maxConcurrent,
+    //   minTime: 100
+    // });
 
-  const promises = [];
+    const promises = [];
 
-  for (let i = 0; i < totalPuts; i++) {
-    // const putPromise = limiter.schedule(makePut(clients[i % numClients], i));
-    const putPromise = limiter(() => makePut(clients[i % numClients], i));
-    promises.push(putPromise);
+    for (let i = 0; i < totalPuts; i++) {
+      // const putPromise = limiter.schedule(makePut(clients[i % numClients], i));
+      const putPromise = limiter(() => makePut(clients[i % numClients], i));
+      promises.push(putPromise);
+    }
+
+    const start = Date.now();
+    const promisesResults = await Promise.all(promises);
+    const totalTime = (Date.now() - start) / 1000;
+
+    const [
+      successfulPutsCount,
+      failedPutsCount
+    ] = getSuccessfulAndFailedPutsCounts(promisesResults);
+
+    printResults(successfulPutsCount, failedPutsCount, totalTime);
   }
-
-  const start = Date.now();
-  const promisesResults = await Promise.all(promises);
-  const totalTime = Math.ceil((Date.now() - start) / 1000);
-
-  const [
-    successfulPutsCount,
-    failedPutsCount
-  ] = getSuccessfulAndFailedPutsCounts(promisesResults);
-
-  printResults(successfulPutsCount, failedPutsCount, totalTime);
 
   process.exit(0);
 }
